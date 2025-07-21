@@ -5,15 +5,11 @@ import (
 )
 
 type Handler struct {
-	authService  service.AuthService
-	feedService  service.FeedService
-	defaultLimit uint64
+	feedService service.FeedService
 }
 
-func New(authService service.AuthService, feedService service.FeedService, defaultLimit uint64) *Handler {
+func New(feedService service.FeedService) *Handler {
 	return &Handler{
-		authService:  authService,
-		feedService:  feedService,
-		defaultLimit: defaultLimit,
+		feedService: feedService,
 	}
 }

@@ -8,6 +8,8 @@ import (
 	"marketplace/pkg/logger"
 
 	"net/http"
+
+	"log/slog"
 )
 
 func (h *Handler) SingUp(w http.ResponseWriter, r *http.Request) {
@@ -18,7 +20,7 @@ func (h *Handler) SingUp(w http.ResponseWriter, r *http.Request) {
 		logger.APIMethod, "SingUp",
 	)
 
-	var reqData models.SingUpInRequest
+	var reqData models.AuthRequest
 
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
@@ -28,20 +30,16 @@ func (h *Handler) SingUp(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body.Close()
 
-	if err := h.validator.Struct(&reqData); err != nil {
-		api.WriteJSONError(ctx, w, validator.ErrorValidate(err))
-		return
+	if h.validationOn {
+		if err := h.validator.Struct(&reqData); err != nil {
+			api.WriteJSONError(ctx, w, validator.ErrorValidate(err))
+			return
+		}
 	}
 
 	userData := models.UserData(reqData)
 
-	userID, err := h.authService.SignUp(ctx, userData)
-	if err != nil {
-		api.WriteJSONError(ctx, w, err)
-		return
-	}
-
-	token, err := h.authService.GenerateJWT(ctx, userID, userData.Login)
+	token, err := h.authService.SignUp(ctx, userData)
 	if err != nil {
 		api.WriteJSONError(ctx, w, err)
 		return
@@ -57,10 +55,10 @@ func (h *Handler) SingUp(w http.ResponseWriter, r *http.Request) {
 	})
 	w.WriteHeader(http.StatusOK)
 
-	logger.InfoAddValues(
+	slog.InfoContext(
 		ctx,
 		logger.HandlerCompletedEvent,
-		logger.UserID, userID,
+		logger.UserLogin, userData.Login,
 		logger.StatusCode, http.StatusOK,
 	)
 }

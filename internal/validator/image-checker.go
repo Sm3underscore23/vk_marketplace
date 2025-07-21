@@ -10,9 +10,7 @@ import (
 	"time"
 )
 
-const maxImageSizeBytes = 5 * 1024 * 1024
-
-func CheckImage(ctx context.Context, imageURL string) error {
+func (v *validatorWrapper) CheckImage(ctx context.Context, imageURL string) error {
 	client := http.Client{Timeout: 5 * time.Second}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodHead, imageURL, nil)
@@ -40,7 +38,7 @@ func CheckImage(ctx context.Context, imageURL string) error {
 		if err != nil {
 			return models.ErrorImageInvalidContentLengthHeader
 		}
-		if size > maxImageSizeBytes {
+		if size > v.maxImageSizeBytes {
 			return models.ErrorImageTooLarge
 		}
 		return nil
@@ -57,13 +55,13 @@ func CheckImage(ctx context.Context, imageURL string) error {
 	}
 	defer resp.Body.Close()
 
-	limitedReader := io.LimitReader(resp.Body, maxImageSizeBytes+1)
+	limitedReader := io.LimitReader(resp.Body, v.maxImageSizeBytes+1)
 	n, err := io.Copy(io.Discard, limitedReader)
 	if err != nil {
 		return models.ErrorImageReadFailed
 	}
 
-	if n > maxImageSizeBytes {
+	if n > v.maxImageSizeBytes {
 		return models.ErrorImageTooLarge
 	}
 

@@ -16,7 +16,7 @@ func AuthStrictMiddleware(authService service.AuthService) func(http.Handler) ht
 			ctx := r.Context()
 			tokenCookie, err := r.Cookie("token")
 			if err != nil {
-				api.WriteJSONError(ctx, w, models.ErrorInvalidAuthHeader)
+				api.WriteJSONError(ctx, w, models.ErrorInvalidCoockieName)
 				return
 			}
 

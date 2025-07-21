@@ -2,6 +2,7 @@ package advertisement
 
 import (
 	"encoding/json"
+	"log/slog"
 	"marketplace/internal/api"
 	"marketplace/internal/models"
 	"marketplace/internal/validator"
@@ -34,15 +35,17 @@ func (h *Handler) CreateAd(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body.Close()
 
-	if err := h.validator.Struct(&reqData); err != nil {
-		api.WriteJSONError(ctx, w, validator.ErrorValidate(err))
-		return
-	}
+	if h.validationOn {
+		if err := h.validator.Struct(&reqData); err != nil {
+			api.WriteJSONError(ctx, w, validator.ErrorValidate(err))
+			return
+		}
 
-	err := validator.CheckImage(ctx, reqData.ImageUrl)
-	if err != nil {
-		api.WriteJSONError(ctx, w, err)
-		return
+		err := h.validator.CheckImage(ctx, reqData.ImageUrl)
+		if err != nil {
+			api.WriteJSONError(ctx, w, err)
+			return
+		}
 	}
 
 	adData := models.AdData{
@@ -56,7 +59,7 @@ func (h *Handler) CreateAd(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: time.Now(),
 	}
 
-	err = h.adService.CreateAd(ctx, adData)
+	err := h.adService.CreateAd(ctx, adData)
 	if err != nil {
 		api.WriteJSONError(ctx, w, err)
 		return
@@ -64,9 +67,9 @@ func (h *Handler) CreateAd(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 
-	logger.InfoAddValues(
+	slog.InfoContext(
 		ctx,
 		logger.HandlerCompletedEvent,
-		logger.StatusCode, http.StatusOK,
+		logger.StatusCode, http.StatusCreated,
 	)
 }

@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-type SingUpInRequest struct {
+type AuthRequest struct {
 	Login    string `json:"login" validate:"required,login"`
 	Password string `json:"password" validate:"required,password"`
 }

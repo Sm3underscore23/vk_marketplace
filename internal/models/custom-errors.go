@@ -12,12 +12,13 @@ type ErrorResponse struct {
 var (
 	ErrParseConfig = fmt.Errorf("failed to parse config")
 
-	ErrorJWTParse          = fmt.Errorf("failed to parse JWT")
-	ErrorInvalidAuthHeader = fmt.Errorf("jws: invalid or empty Authorization header")
-	ErrorSingingMethod     = fmt.Errorf("jws: unexpected signing method")
-	ErrorTokenClaims       = fmt.Errorf("jws: invalid or expired token")
-	ErrorUserIDClaims      = fmt.Errorf("jws: user_id not found or invalid in tokens")
-	ErrorUserLoginClaims   = fmt.Errorf("jws:user_login not found or invalid in token")
+	ErrorJWTParse           = fmt.Errorf("failed to parse JWT")
+	ErrorInvalidCoockieName = fmt.Errorf("jws: invalid or empty coockie name")
+	ErrorInvalidJWTFormat   = fmt.Errorf("jws: invalid JWT format")
+	ErrorSingingMethod      = fmt.Errorf("jws: unexpected signing method")
+	ErrorTokenClaims        = fmt.Errorf("jws: invalid or expired token")
+	ErrorUserIDClaims       = fmt.Errorf("jws: user_id not found or invalid in tokens")
+	ErrorUserLoginClaims    = fmt.Errorf("jws:user_login not found or invalid in token")
 
 	ErrorGetUserIDCtx    = fmt.Errorf("ctx: user_id not found")
 	ErrorGetUserLoginctx = fmt.Errorf("ctx:user_login not found")
@@ -62,8 +63,14 @@ var (
 	ErrorDb = fmt.Errorf("db error")
 
 	errorToStatus = map[error]int{
-		ErrorJWTParse:        http.StatusUnauthorized,
-		ErrorUserLoginClaims: http.StatusUnauthorized,
+		ErrorJWTParse:           http.StatusUnauthorized,
+		ErrorInvalidCoockieName: http.StatusUnauthorized,
+		ErrorInvalidJWTFormat:   http.StatusUnauthorized,
+		ErrorSingingMethod:      http.StatusUnauthorized,
+		ErrorTokenClaims:        http.StatusUnauthorized,
+		ErrorUserIDClaims:       http.StatusUnauthorized,
+		ErrorUserLoginClaims:    http.StatusUnauthorized,
+		ErrorUserLoginClaims:    http.StatusUnauthorized,
 
 		ErrorInvalidReqBody: http.StatusBadRequest,
 
@@ -92,6 +99,7 @@ var (
 		ErrorInvalidPriceMaxURIParam:  http.StatusBadRequest,
 		ErrorInvalidCreatedAtURIParam: http.StatusBadRequest,
 		ErrorInvalidLimitURIParam:     http.StatusBadRequest,
+		ErrorInvalidPricesURIParam:    http.StatusBadRequest,
 
 		ErrorShortCursor: http.StatusBadRequest,
 		ErrorCursorParse: http.StatusBadRequest,

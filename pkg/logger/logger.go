@@ -12,7 +12,6 @@ const (
 	RequestRemoteAddr = "request_remote_address"
 
 	APIMethod  = "api_method"
-	TraceID    = "trace_id"
 	StatusCode = "status_code"
 	Error      = "error"
 
@@ -22,8 +21,6 @@ const (
 	HandlerStartedEvent    = "handler started"
 	HandlerCompletedEvent  = "handler completed"
 	HandlerErrorEvent      = "handler error"
-	GetTokenAmountEvent    = "get client token amount"
-	RemainTokenAmountEvent = "remain client token amount"
 )
 
 type keyType int

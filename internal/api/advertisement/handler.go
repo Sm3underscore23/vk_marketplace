@@ -2,18 +2,19 @@ package advertisement
 
 import (
 	service "marketplace/internal/sevice"
-
-	"github.com/go-playground/validator/v10"
+	"marketplace/internal/validator"
 )
 
 type Handler struct {
-	adService service.AdvertisementService
-	validator *validator.Validate
+	adService    service.AdvertisementService
+	validator    validator.CustomValidator
+	validationOn bool
 }
 
-func New(adService service.AdvertisementService, validator *validator.Validate) *Handler {
+func New(adService service.AdvertisementService, validationOn bool, validator validator.CustomValidator) *Handler {
 	return &Handler{
-		adService: adService,
-		validator: validator,
+		adService:    adService,
+		validationOn: validationOn,
+		validator:    validator,
 	}
 }

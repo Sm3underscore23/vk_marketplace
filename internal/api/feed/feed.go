@@ -2,6 +2,7 @@ package feed
 
 import (
 	"encoding/json"
+	"log/slog"
 	"marketplace/internal/api"
 	"marketplace/internal/models"
 	"marketplace/pkg/logger"
@@ -16,18 +17,13 @@ func (h *Handler) Feed(w http.ResponseWriter, r *http.Request) {
 		logger.APIMethod, "Feed",
 	)
 
-	q := r.URL.Query()
-	uriParams, err := h.feedService.ParseURIParams(q, h.defaultLimit)
-	if err != nil {
-		api.WriteJSONError(ctx, w, err)
-		return
-	}
+	query := r.URL.Query()
 
-	cursor := q.Get("cursor")
+	cursor := query.Get("cursor")
 
 	userLogin, _ := ctx.Value(models.UserLoginKey).(string)
 
-	ads, nextPageURl, err := h.feedService.Feed(ctx, uriParams, cursor, userLogin)
+	ads, nextPageURl, err := h.feedService.Feed(ctx, query, cursor, userLogin)
 
 	if err != nil {
 		api.WriteJSONError(ctx, w, err)
@@ -46,5 +42,8 @@ func (h *Handler) Feed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
+	slog.InfoContext(
+		ctx,
+		logger.HandlerCompletedEvent,
+	)
 }

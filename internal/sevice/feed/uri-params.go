@@ -1,17 +1,51 @@
 package feed
 
 import (
+	"context"
+	"fmt"
 	"marketplace/internal/models"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
-func (f *feedService) ParseURIParams(query url.Values, defaultLimit uint64) (models.FeedURIParams, error) {
+func generateFeedURI(ctx context.Context, baseURl string, uriParams models.FeedURIParams, cursor string) string {
+	var builder strings.Builder
+
+	builder.WriteString(fmt.Sprintf("%s/feed?%s=%s&%s=%s&%s=%s",
+		baseURl,
+		models.URIParamCursor, cursor,
+		models.URIParamSortBy, uriParams.SortBy,
+		models.URIParamOrder, uriParams.Order,
+	))
+
+	if uriParams.PriceMin > 0 {
+		builder.WriteString(fmt.Sprintf("&%s=%v",
+			models.URIParamPriceMin, uriParams.PriceMin))
+	}
+
+	if uriParams.PriceMax > 0 {
+		builder.WriteString(fmt.Sprintf("&%s=%v",
+			models.URIParamPriceMax, uriParams.PriceMax))
+	}
+
+	if !uriParams.CreatedAfter.IsZero() {
+		builder.WriteString(fmt.Sprintf("&%s=%T",
+			models.URIParamCreatedAfter, uriParams.CreatedAfter))
+	}
+
+	builder.WriteString(fmt.Sprintf("&%s=%v",
+		models.URIParamLimit, uriParams.Limit))
+
+	return builder.String()
+}
+
+func (f *feedService) parseURIParams(query url.Values) (models.FeedURIParams, error) {
 	uriParams := models.FeedURIParams{
 		SortBy: "date",
 		Order:  "desc",
-		Limit:  defaultLimit,
+		Limit:  f.defaultLimit,
 	}
 
 	for key := range query {

@@ -29,12 +29,6 @@ migration-down:
 	$(MAKE) check-goose
 	$(LOCAL_BIN)/goose -dir $(LOCAL_MIGRATION_DIR) postgres $(LOCAL_MIGRATION_DSN) down -v
 
-build-balancer:
-	docker buildx build --platform linux/amd64 -t balancer:v0.1 -f ./balancer.Dockerfile .
-
-build-backend-test:
-	docker buildx build --platform linux/amd64 -t backend-test:v0.1 -f ./backend-test.Dockerfile .
-
 pg-up:
 	docker compose -f postgres.docker-compose.yaml up
 
@@ -43,3 +37,4 @@ pg-down:
 
 local-run:
 	go run cmd/main.go -config-path config/local/config.yaml -local
+	

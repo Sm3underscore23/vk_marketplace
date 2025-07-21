@@ -1,46 +1,12 @@
 package feed
 
 import (
-	"context"
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"marketplace/internal/models"
-	"strings"
 )
-
-func generateFeedURI(ctx context.Context, baseURl string, uriParams models.FeedURIParams, cursor string) string {
-	var builder strings.Builder
-
-	builder.WriteString(fmt.Sprintf("%s/feed?%s=%s&%s=%s&%s=%s",
-		baseURl,
-		models.URIParamCursor, cursor,
-		models.URIParamSortBy, uriParams.SortBy,
-		models.URIParamOrder, uriParams.Order,
-	))
-
-	if uriParams.PriceMin > 0 {
-		builder.WriteString(fmt.Sprintf("&%s=%v",
-			models.URIParamPriceMin, uriParams.PriceMin))
-	}
-
-	if uriParams.PriceMax > 0 {
-		builder.WriteString(fmt.Sprintf("&%s=%v",
-			models.URIParamPriceMax, uriParams.PriceMax))
-	}
-
-	if !uriParams.CreatedAfter.IsZero() {
-		builder.WriteString(fmt.Sprintf("&%s=%T",
-			models.URIParamCreatedAfter, uriParams.CreatedAfter))
-	}
-
-	builder.WriteString(fmt.Sprintf("&%s=%v",
-		models.URIParamLimit, uriParams.Limit))
-
-	return builder.String()
-}
 
 func generateCursor(aesgcm cipher.AEAD, lastAdData models.LastAdData) (string, error) {
 	nonce := make([]byte, 12)

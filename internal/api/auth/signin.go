@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"log/slog"
 	"marketplace/internal/api"
 	"marketplace/internal/models"
 	"marketplace/internal/validator"
@@ -18,7 +19,7 @@ func (h *Handler) SingIn(w http.ResponseWriter, r *http.Request) {
 		logger.APIMethod, "SingIn",
 	)
 
-	var reqData models.SingUpInRequest
+	var reqData models.AuthRequest
 
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
@@ -28,20 +29,16 @@ func (h *Handler) SingIn(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body.Close()
 
-	if err := h.validator.Struct(&reqData); err != nil {
-		api.WriteJSONError(ctx, w, validator.ErrorValidate(err))
-		return
+	if h.validationOn {
+		if err := h.validator.Struct(&reqData); err != nil {
+			api.WriteJSONError(ctx, w, validator.ErrorValidate(err))
+			return
+		}
 	}
 
 	userData := models.UserData(reqData)
 
-	userID, err := h.authService.VerifyUser(ctx, userData)
-	if err != nil {
-		api.WriteJSONError(ctx, w, err)
-		return
-	}
-
-	token, err := h.authService.GenerateJWT(ctx, userID, userData.Login)
+	tokenJWT, err := h.authService.VerifyUser(ctx, userData)
 	if err != nil {
 		api.WriteJSONError(ctx, w, err)
 		return
@@ -49,7 +46,7 @@ func (h *Handler) SingIn(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
-		Value:    token,
+		Value:    tokenJWT,
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   false,
@@ -58,10 +55,9 @@ func (h *Handler) SingIn(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.WriteHeader(http.StatusOK)
 
-	logger.InfoAddValues(
+	slog.InfoContext(
 		ctx,
 		logger.HandlerCompletedEvent,
-		logger.UserID, userID,
 		logger.UserLogin, userData.Login,
 		logger.StatusCode, http.StatusOK,
 	)

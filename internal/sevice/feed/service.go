@@ -7,15 +7,17 @@ import (
 )
 
 type feedService struct {
-	adRepo  repository.AdvertisementRepository
-	aesgcm  cipher.AEAD
-	baseURL string
+	adRepo       repository.AdvertisementRepository
+	aesgcm       cipher.AEAD
+	defaultLimit uint64
+	baseURL      string
 }
 
-func New(adRepo repository.AdvertisementRepository, aesgcm cipher.AEAD, baseURL string) service.FeedService {
+func New(adRepo repository.AdvertisementRepository, aesgcm cipher.AEAD, defaultLimit uint64, baseURL string) service.FeedService {
 	return &feedService{
-		adRepo:  adRepo,
-		aesgcm:  aesgcm,
-		baseURL: baseURL,
+		adRepo:       adRepo,
+		aesgcm:       aesgcm,
+		defaultLimit: defaultLimit,
+		baseURL:      baseURL,
 	}
 }

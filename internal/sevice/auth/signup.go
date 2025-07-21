@@ -9,43 +9,48 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (a *authService) SignUp(ctx context.Context, userData models.UserData) (int, error) {
-	var userID int
+func (a *authService) SignUp(ctx context.Context, userData models.UserData) (string, error) {
+	var tokenJWT string
 	isExists, err := a.userRepo.IsLoginExists(ctx, userData.Login)
 	if err != nil {
 		slog.ErrorContext(
 			ctx,
-			"AuthService.SignUp",
+			"AuthService.SignUp.IsLoginExists",
 			logger.Error, err,
 		)
-		return userID, models.ErrorDb
+		return tokenJWT, models.ErrorDb
 	}
 
 	if isExists {
-		return userID, models.ErrorLoginAlreadyExists
+		return tokenJWT, models.ErrorLoginAlreadyExists
 	}
 
 	passwordHash, err := generatePasswordHash(userData.Password)
 	if err != nil {
 		slog.ErrorContext(
 			ctx,
-			"AuthService.SignUp",
+			"AuthService.SignUp.generatePasswordHash",
 			logger.Error, err,
 		)
-		return userID, models.ErrorPasswordHashGenerate
+		return tokenJWT, models.ErrorPasswordHashGenerate
 	}
 
-	userID, err = a.userRepo.CreateUser(ctx, userData.Login, passwordHash)
+	userID, err := a.userRepo.CreateUser(ctx, userData.Login, passwordHash)
 	if err != nil {
 		slog.ErrorContext(
 			ctx,
-			"AuthService.SignUp",
+			"AuthService.SignUp.CreateUser",
 			logger.Error, err,
 		)
-		return userID, models.ErrorDb
+		return tokenJWT, models.ErrorDb
 	}
 
-	return userID, nil
+	tokenJWT, err = a.generateJWT(ctx, userID, userData.Login)
+	if err != nil {
+		return tokenJWT, err
+	}
+
+	return tokenJWT, nil
 }
 
 func generatePasswordHash(password string) (string, error) {

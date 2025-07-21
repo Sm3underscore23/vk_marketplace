@@ -2,10 +2,13 @@ package feed
 
 import (
 	"context"
+	"log/slog"
 	"marketplace/internal/models"
+	"marketplace/pkg/logger"
+	"net/url"
 )
 
-func (f *feedService) Feed(ctx context.Context, uriParams models.FeedURIParams, cursor string, userLogin string) ([]models.AdForFeed, string, error) {
+func (f *feedService) Feed(ctx context.Context, query url.Values, cursor string, userLogin string) ([]models.AdForFeed, string, error) {
 	var (
 		ads           []models.AdForFeed
 		nextPageURI   string
@@ -13,20 +16,45 @@ func (f *feedService) Feed(ctx context.Context, uriParams models.FeedURIParams, 
 		err           error
 	)
 
+	uriParams, err := f.parseURIParams(query)
+	if err != nil {
+		slog.ErrorContext(
+			ctx,
+			"Service.Feed.parseURIParams",
+			logger.Error, err,
+		)
+		return ads, nextPageURI, err
+	}
+
 	if cursor == "" {
 		ads, newlastAdData, err = f.adRepo.Feed(ctx, uriParams, models.LastAdData{}, userLogin)
 		if err != nil {
-			return ads, nextPageURI, err
+			slog.ErrorContext(
+				ctx,
+				"Service.Feed.UnAuthFeed",
+				logger.Error, err,
+			)
+			return ads, nextPageURI, models.ErrorDb
 		}
 	}
 
 	if cursor != "" {
 		lastAdData, err := parseCursor(f.aesgcm, cursor)
 		if err != nil {
+			slog.ErrorContext(
+				ctx,
+				"Service.Feed.parseCursor",
+				logger.Error, err,
+			)
 			return ads, nextPageURI, models.ErrorCursorParse
 		}
 		ads, newlastAdData, err = f.adRepo.Feed(ctx, uriParams, lastAdData, userLogin)
 		if err != nil {
+			slog.ErrorContext(
+				ctx,
+				"Service.Feed.AuthFeed",
+				logger.Error, err,
+			)
 			return ads, nextPageURI, err
 		}
 	}
@@ -37,6 +65,11 @@ func (f *feedService) Feed(ctx context.Context, uriParams models.FeedURIParams, 
 
 	newCursor, err := generateCursor(f.aesgcm, newlastAdData)
 	if err != nil {
+		slog.ErrorContext(
+			ctx,
+			"Service.Feed.generateCursor",
+			logger.Error, err,
+		)
 		return ads, nextPageURI, models.ErrorCursorGenerate
 	}
 

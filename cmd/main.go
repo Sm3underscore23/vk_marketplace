@@ -33,8 +33,9 @@ import (
 )
 
 var (
-	configPath = flag.String("config-path", "", "Path to config file")
-	isLocal    = flag.Bool("local", false, "local run")
+	configPath   = flag.String("config-path", "", "Path to config file")
+	isLocal      = flag.Bool("local", false, "local run")
+	validationOn = flag.Bool("validation", false, "validation on")
 )
 
 func main() {
@@ -68,21 +69,27 @@ func main() {
 		logger.Fatal("connect to database", logger.Error, err)
 	}
 
-	validator := validator.New()
+	var v validator.CustomValidator
+	if *validationOn {
+		v = validator.New(mainConfig.GetMaxImageSize())
+	}
 
 	userRepo := userRepo.New(db)
 	authService := authService.New(userRepo, mainConfig.GetJWSKey())
-	authHandler := auth.New(authService, validator)
+	authHandler := auth.New(authService, *validationOn, v)
 
 	adRepo := adRepo.New(db)
 	adSevice := adService.New(adRepo)
-	adHandler := advertisement.New(adSevice, validator)
+	adHandler := advertisement.New(adSevice, *validationOn, v)
 
-	feedService := feedService.New(adRepo, aesgcm, "http://"+mainConfig.GetServerAddress())
-	feedHandler := feed.New(authService, feedService, mainConfig.GetDefoultFeedLimit())
+	feedService := feedService.New(
+		adRepo, aesgcm,
+		mainConfig.GetDefoultFeedLimit(), "http://"+mainConfig.GetServerAddress(),
+	)
+	feedHandler := feed.New(feedService)
 
-	r.Get("/sign_in", authHandler.SingIn)
-	r.Get("/sign_up", authHandler.SingUp)
+	r.With(middleware.LoggingMiddleware).Post("/sign_in", authHandler.SingIn)
+	r.With(middleware.LoggingMiddleware).Post("/sign_up", authHandler.SingUp)
 
 	r.Route("/advertisements", func(r chi.Router) {
 		r.Use(
@@ -90,9 +97,9 @@ func main() {
 			middleware.AuthStrictMiddleware(authService),
 		)
 		r.Post("/create", adHandler.CreateAd)
-		r.Get("/get", adHandler.GetAd)
-		r.Patch("/update", adHandler.UpdateAd)
-		r.Delete("/delete", adHandler.DeleteAd)
+		// r.Get("/get", adHandler.GetAd)
+		// r.Patch("/update", adHandler.UpdateAd)
+		// r.Delete("/delete", adHandler.DeleteAd)
 	})
 
 	r.With(middleware.LoggingMiddleware, middleware.AuthOptionalMiddleware(authService)).

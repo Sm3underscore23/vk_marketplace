@@ -11,30 +11,26 @@ import (
 )
 
 type serverConfig struct {
-	Host             string `yaml:"host"`
-	Port             string `yaml:"port"`
-	JWTSecretKey     string `yaml:"jwt_secret_key"`
-	AESSecretKey     string `yaml:"aes_secret_key"`
-	DefoultFeedLimit uint64 `yaml:"feed_limit"`
+	Host              string `yaml:"host"`
+	Port              string `yaml:"port"`
+	JWTSecretKey      string
+	AESSecretKey      string 
+	MaxImageSizeBytes int64  `yaml:"max_image_size_bytes"`
+	DefoultFeedLimit  uint64 `yaml:"feed_limit"`
 }
 
-type tracerConfig struct {
-	Host string `yaml:"host"`
-	Port string `yaml:"port"`
-}
 
 type dbConfig struct {
 	DbHost     string `yaml:"db_host"`
 	DbPort     string `yaml:"db_port"`
 	DbName     string `yaml:"db_name"`
 	DbUser     string `yaml:"db_user"`
-	DbPassword string `yaml:"db_password"`
+	DbPassword string
 	DbSSL      string `yaml:"db_sslmode"`
 }
 
 type MainConfig struct {
 	ServerConfig serverConfig `yaml:"server"`
-	TracerConfig tracerConfig `yaml:"tracer"`
 	DbConfig     dbConfig     `yaml:"db"`
 }
 
@@ -91,12 +87,12 @@ func (cfg *MainConfig) GetAESKey() string {
 	return cfg.ServerConfig.AESSecretKey
 }
 
-func (cfg *MainConfig) GetDefoultFeedLimit() uint64 {
-	return cfg.ServerConfig.DefoultFeedLimit
+func (cfg *MainConfig) GetMaxImageSize() int64 {
+	return cfg.ServerConfig.MaxImageSizeBytes
 }
 
-func (cfg *MainConfig) GetTracerAddress() string {
-	return net.JoinHostPort(cfg.TracerConfig.Host, cfg.TracerConfig.Port)
+func (cfg *MainConfig) GetDefoultFeedLimit() uint64 {
+	return cfg.ServerConfig.DefoultFeedLimit
 }
 
 func (cfg *MainConfig) GetDbConfig() string {

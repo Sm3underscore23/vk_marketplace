@@ -11,32 +11,33 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (a *authService) GenerateJWT(ctx context.Context, userID int, userLogin string) (string, error) {
+func (a *authService) generateJWT(ctx context.Context, userID int, userLogin string) (string, error) {
+	var token string
 	claims := jwt.MapClaims{
 		string(models.UserIDKey):    userID,
 		string(models.UserLoginKey): userLogin,
 		"exp":                       time.Now().Add(time.Hour * 24).Unix(),
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	t, err := token.SignedString([]byte(a.salt))
+	rawToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err := rawToken.SignedString([]byte(a.salt))
 	if err != nil {
 		slog.ErrorContext(
 			ctx,
 			"AuthService.GenerateJWT",
 			logger.Error, err,
 		)
-		return "", models.ErrorJWTGenerate
+		return token, models.ErrorJWTGenerate
 	}
 
-	return t, nil
+	return token, nil
 }
 
 func (a *authService) ParseJWT(ctx context.Context, authHeader string) (models.ClaimData, error) {
 	var claimData models.ClaimData
 	fields := strings.Fields(authHeader)
 	if len(fields) != 2 || strings.ToLower(fields[0]) != "bearer" {
-		return claimData, models.ErrorInvalidAuthHeader
+		return claimData, models.ErrorInvalidJWTFormat
 	}
 
 	tokenStr := fields[1]

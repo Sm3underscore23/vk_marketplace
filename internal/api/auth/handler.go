@@ -2,18 +2,19 @@ package auth
 
 import (
 	service "marketplace/internal/sevice"
-
-	"github.com/go-playground/validator/v10"
+	"marketplace/internal/validator"
 )
 
 type Handler struct {
-	authService service.AuthService
-	validator   *validator.Validate
+	authService  service.AuthService
+	validator    validator.CustomValidator
+	validationOn bool
 }
 
-func New(authService service.AuthService, validator *validator.Validate) *Handler {
+func New(authService service.AuthService, validationOn bool, validator validator.CustomValidator) *Handler {
 	return &Handler{
-		authService: authService,
-		validator:   validator,
+		authService:  authService,
+		validator:    validator,
+		validationOn: validationOn,
 	}
 }
