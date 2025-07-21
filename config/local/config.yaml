@@ -3,7 +3,3 @@ server:
   port: 8080
   max_image_size_bytes: 5242880
   feed_limit: 2
-
-tracer:
-  host: localhost 
-  port: 4318
