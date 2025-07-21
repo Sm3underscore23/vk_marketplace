@@ -8,8 +8,103 @@
 * Работа с куками для безопасного хранения токена.
 * Создание объявлений (title, description, price, image).
 * Получение ленты объявлений с курсорной пагинацией.
-* Валидация входящих данных с помощью тегов `validate` и кастомных правил.
+* Валидация входящих данных с помощью тегов и кастомных правил.
 * Гибкая сортировка объявлений по дате создания или цене в любом порядке.
+
+
+---
+
+
+## Содержание
+- [Технологии](#технологии)
+- [Начало работы](#начало-работы)
+- [Архитектура и реализация](##архитектура-и-реализация)
+- [Основные маршруты API](##основные-маршруты-api)
+
+
+---
+
+
+## Технологии
+### Основные
+- [Go](https://github.com/golang/go)
+- [PostgreSQL](https://github.com/postgres/postgres)
+- [Docker](https://github.com/docker)
+- [Docker compose](https://github.com/docker/compose)
+
+### Вспомогательные
+- [PGX](https://github.com/jackc/pgx)
+- [Goose](https://github.com/pressly/goose)
+- [Squirrel](https://github.com/Masterminds/squirrel)
+
+---
+
+## Начало работы
+
+### Конфигурация проекта
+
+Проект использует два источника конфигурации:
+
+#### 1. YAML-файл
+
+```yaml
+server:
+  host: localhost               # Хост, на котором запускается сервер
+  port: 8080                    # Порт, на котором запускается HTTP-сервер
+  max_image_size_bytes: 5242880 # Максимальный размер изображения (в байтах) — 5 МБ
+  feed_limit: 2                 # Количество объявлений по умолчанию в ленте
+```
+
+---
+
+#### 2. Переменные окружения (`.env`)
+
+```env
+# Ключи шифрования и подписи
+
+APP_JWT_SECRET_KEY=my_secret_key     # Секретный ключ для подписи JWT-токенов
+APP_AES_SECRET_KEY=my_secret_keyyyy # Секретный ключ для симметричного AES-шифрования (16, 24, 32 байта)
+
+# Настройки PostgreSQL
+
+PG_HOST=localhost                    # Адрес сервера PostgreSQL
+PG_PORT=5432                         # Порт подключения
+PG_DATABASE_NAME=marketplace_db      # Название базы данных
+PG_USER=admin                        # Имя пользователя PostgreSQL
+PG_PASSWORD=1234                     # Пароль пользователя
+PG_SSLMODE=disable                   # Режим SSL-соединения (disable — для локальной разработки)
+
+# Миграции
+
+MIGRATION_DIR=./migrations           # Путь до папки с SQL-миграциями
+```
+
+### Запуск проекта
+Для запуска PostgreSQL и накатывания миграций выполните:
+
+```sh
+make pg-up
+make migration-up
+```
+
+Для запуска проекта доступны несколько режимов, которые управляются флагами командной строки:
+
+```sh
+  -config-path your/congig.yaml    путь до YAML-конфига
+  -local                           запуск в локальном режиме
+  -validation                      включение валидации входных данных
+```
+
+#### Локальный запуск **с валидацией** (через Makefile)
+
+```bash
+make local-up
+```
+
+> Под капотом запускается:
+> `go run cmd/main.go -config-path=config/local/config.yaml -local -validation`
+
+---
 
 ### Основные маршруты API:
 
