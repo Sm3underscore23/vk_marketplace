@@ -1,0 +1,8 @@
+server:
+  host: localhost
+  port: 8080
+  feed_limit: 2
+
+tracer:
+  host: localhost 
+  port: 4318
